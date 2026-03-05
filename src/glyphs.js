@@ -93,6 +93,23 @@ function saveSettings(settings) {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(merged));
 }
 
+function exportProject() {
+  return {
+    version: 1,
+    settings: getSettings(),
+    glyphs: loadGlyphStore(),
+  };
+}
+
+function importProject(data) {
+  if (!data || !data.glyphs) return false;
+  if (data.settings) {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(data.settings));
+  }
+  saveGlyphStore(data.glyphs);
+  return true;
+}
+
 export {
   GLYPHS,
   getGlyphSet,
@@ -104,4 +121,6 @@ export {
   getDrawnCount,
   getSettings,
   saveSettings,
+  exportProject,
+  importProject,
 };

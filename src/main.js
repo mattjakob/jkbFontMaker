@@ -1,5 +1,5 @@
 import { getSystemFonts } from './fonts.js';
-import { getGlyphSet, getGlyph, getSettings, saveSettings, getDrawnCount, GLYPHS } from './glyphs.js';
+import { getGlyphSet, getGlyph, getSettings, saveSettings, getDrawnCount, GLYPHS, importProject } from './glyphs.js';
 import { renderGrid, updateCard, refreshAllThumbnails } from './grid.js';
 import { Editor } from './editor.js';
 import { Preview } from './preview.js';
@@ -61,6 +61,7 @@ async function init() {
     saveSettings({ referenceFont: refFontSelect.value });
     editor.updateReferenceFont(refFontSelect.value);
     preview.setReferenceFont(refFontSelect.value);
+    refreshAllThumbnails(glyphGrid, getGlyphSet(), getSettings());
   });
 
   strokeWidthInput.addEventListener('input', () => {
@@ -81,6 +82,47 @@ async function init() {
     const fontName = document.getElementById('fontName').value || 'MyFont';
     const sw = parseInt(document.getElementById('strokeWidth').value);
     exportFont(fontName, sw);
+  });
+
+  // Import button
+  const importFileInput = document.getElementById('importFile');
+  document.getElementById('importBtn').addEventListener('click', () => {
+    importFileInput.click();
+  });
+  importFileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (importProject(data)) {
+          // Restore all UI from imported data
+          const s = getSettings();
+          fontNameInput.value = s.fontName;
+          strokeWidthInput.value = s.strokeWidth;
+          strokeWidthValue.textContent = s.strokeWidth + 'px';
+          // Update reference font select if the font is in the list
+          for (const opt of refFontSelect.options) {
+            if (opt.value === s.referenceFont) {
+              opt.selected = true;
+              break;
+            }
+          }
+          editor.updateReferenceFont(s.referenceFont);
+          editor.updateStrokeWidth(s.strokeWidth);
+          preview.setReferenceFont(s.referenceFont);
+          renderGrid(glyphGrid, getGlyphSet(), s, (char) => {
+            editor.open(char, refFontSelect.value, parseInt(strokeWidthInput.value));
+          });
+          updateProgress();
+        }
+      } catch {
+        // Invalid JSON
+      }
+      importFileInput.value = '';
+    };
+    reader.readAsText(file);
   });
 
   // Listen for glyph updates to refresh cards

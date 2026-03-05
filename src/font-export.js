@@ -1,6 +1,6 @@
 import opentype from 'opentype.js';
 import { glyphToContours, TRACE_SIZE } from './contour.js';
-import { getAllGlyphs } from './glyphs.js';
+import { getAllGlyphs, exportProject } from './glyphs.js';
 
 export function exportFont(fontName, strokeWidth) {
   const unitsPerEm = 1000;
@@ -71,4 +71,15 @@ export function exportFont(fontName, strokeWidth) {
 
   const sanitizedName = (fontName || 'MyFont').replace(/[^a-zA-Z0-9]/g, '');
   font.download(sanitizedName + '.otf');
+
+  // Also export project JSON
+  const project = exportProject();
+  const json = JSON.stringify(project, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = sanitizedName + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
 }
