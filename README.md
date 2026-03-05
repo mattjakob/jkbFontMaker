@@ -1,6 +1,4 @@
-<p align="center">
-  <img src="icon.png" alt="jkbFontMaker" width="128">
-</p>
+<img src="icon.png" alt="jkbFontMaker" width="128">
 
 # jkbFontMaker
 
