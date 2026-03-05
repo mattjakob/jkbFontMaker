@@ -3,6 +3,7 @@ import { getGlyphSet, getGlyph, getSettings, saveSettings, getDrawnCount, GLYPHS
 import { renderGrid, updateCard } from './grid.js';
 import { Editor } from './editor.js';
 import { Preview } from './preview.js';
+import { exportFont } from './font-export.js';
 
 async function init() {
   // Load settings
@@ -72,6 +73,13 @@ async function init() {
   const glyphs = getGlyphSet();
   renderGrid(glyphGrid, glyphs, settings, (char) => {
     editor.open(char, refFontSelect.value, parseInt(strokeWidthInput.value));
+  });
+
+  // Export button
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    const fontName = document.getElementById('fontName').value || 'MyFont';
+    const sw = parseInt(document.getElementById('strokeWidth').value);
+    exportFont(fontName, sw);
   });
 
   // Listen for glyph updates to refresh cards
