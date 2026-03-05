@@ -60,6 +60,32 @@ async function init() {
   preview.setReferenceFont(settings.referenceFont);
   preview.setKerning(settings.kerning);
 
+  // Mobile preview toggle
+  const previewSection = document.getElementById('previewSection');
+  const previewHandle = document.getElementById('previewHandle');
+  const isMobile = () => window.matchMedia('(max-width: 640px)').matches;
+
+  if (isMobile()) previewSection.classList.add('preview-section--collapsed');
+
+  previewHandle.addEventListener('click', () => {
+    previewSection.classList.toggle('preview-section--collapsed');
+  });
+
+  let touchStartY = 0;
+  previewSection.addEventListener('touchstart', (e) => {
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+  previewSection.addEventListener('touchend', (e) => {
+    if (!isMobile()) return;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    if (dy < -30) previewSection.classList.remove('preview-section--collapsed');
+    if (dy > 30) previewSection.classList.add('preview-section--collapsed');
+  }, { passive: true });
+
+  document.getElementById('previewInput').addEventListener('focus', () => {
+    if (isMobile()) previewSection.classList.remove('preview-section--collapsed');
+  });
+
   // Render glyph grid
   const glyphGrid = document.getElementById('glyphGrid');
   const glyphs = getGlyphSet();

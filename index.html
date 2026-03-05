@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>jkbFontMaker</title>
   <link rel="icon" type="image/png" href="/icon.png">
   <link rel="apple-touch-icon" href="/icon.png">
@@ -45,6 +45,9 @@
     <main class="glyph-grid" id="glyphGrid"></main>
 
     <section class="preview-section" id="previewSection">
+      <div class="preview-handle" id="previewHandle">
+        <span class="preview-handle__bar"></span>
+      </div>
       <input type="text" class="preview-input" id="previewInput" placeholder="Type to preview your font..." value="" spellcheck="false" autocomplete="off">
       <canvas class="preview-canvas" id="previewCanvas"></canvas>
     </section>
