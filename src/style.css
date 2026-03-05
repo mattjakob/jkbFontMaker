@@ -1,0 +1,28 @@
+:root {
+  --bg: #000;
+  --surface: #111;
+  --surface-2: #1a1a1a;
+  --border: #333;
+  --border-hover: #555;
+  --text: #fff;
+  --text-muted: #888;
+  --text-faint: #555;
+  --accent: #fff;
+  --radius: 6px;
+  --radius-lg: 12px;
+  --font: 'Fira Code', monospace;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
