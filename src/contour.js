@@ -6,11 +6,53 @@ export function glyphToContours(strokes, strokeWidth) {
   const { grid, width, height } = renderToGrid(strokes, strokeWidth);
   const rawContours = extractContours(grid, width, height);
 
-  // Simplify, then reverse for correct TrueType winding after Y-flip
-  return rawContours
-    .map(c => simplify(c, 1.5))
-    .filter(c => c.length >= 3)
-    .map(c => c.reverse());
+  const simplified = rawContours
+    .map(c => simplify(c, 0.5))
+    .filter(c => c.length >= 3);
+
+  // Fix winding for TrueType non-zero fill rule.
+  // Marching squares traces all contours CW in pixel coords.
+  // After Y-flip in font-export, they all become CCW.
+  // TrueType needs: outer contours CW, holes CCW (in font Y-up coords).
+  // So: reverse outer contours (even nesting depth), leave holes as-is.
+  return fixWinding(simplified);
+}
+
+function fixWinding(contours) {
+  // Determine nesting: count how many other contours contain each one
+  const nesting = contours.map(() => 0);
+
+  for (let i = 0; i < contours.length; i++) {
+    const testPoint = contours[i][0];
+    for (let j = 0; j < contours.length; j++) {
+      if (i === j) continue;
+      if (isPointInContour(testPoint, contours[j])) {
+        nesting[i]++;
+      }
+    }
+  }
+
+  // Even nesting = outer contour → reverse (becomes CW after Y-flip)
+  // Odd nesting = hole → leave as-is (stays CCW after Y-flip)
+  return contours.map((c, i) =>
+    nesting[i] % 2 === 0 ? [...c].reverse() : c
+  );
+}
+
+function isPointInContour(point, contour) {
+  let inside = false;
+  const { x, y } = point;
+
+  for (let i = 0, j = contour.length - 1; i < contour.length; j = i++) {
+    const xi = contour[i].x, yi = contour[i].y;
+    const xj = contour[j].x, yj = contour[j].y;
+
+    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) {
+      inside = !inside;
+    }
+  }
+
+  return inside;
 }
 
 function renderToGrid(strokes, strokeWidth) {
