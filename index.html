@@ -10,7 +10,56 @@
   <link rel="stylesheet" href="/src/style.css">
 </head>
 <body>
-  <div id="app"></div>
+  <div id="app">
+    <header class="top-bar">
+      <div class="top-bar__left">
+        <input type="text" class="font-name-input" id="fontName" value="My Font" spellcheck="false" autocomplete="off">
+      </div>
+      <div class="top-bar__center">
+        <label class="control">
+          <span class="control__label">Reference</span>
+          <select id="refFont" class="control__select"></select>
+        </label>
+        <label class="control">
+          <span class="control__label">Stroke</span>
+          <input type="range" id="strokeWidth" min="2" max="24" value="8" class="control__range">
+          <span class="control__value" id="strokeWidthValue">8px</span>
+        </label>
+        <span class="control">
+          <span class="control__label">Progress</span>
+          <span class="control__value" id="progressCount">0 / 72</span>
+        </span>
+      </div>
+      <div class="top-bar__right">
+        <button class="btn btn--primary" id="exportBtn">Export .otf</button>
+      </div>
+    </header>
+
+    <main class="glyph-grid" id="glyphGrid"></main>
+
+    <section class="preview-section" id="previewSection">
+      <input type="text" class="preview-input" id="previewInput" placeholder="Type to preview your font..." value="Hello World" spellcheck="false" autocomplete="off">
+      <canvas class="preview-canvas" id="previewCanvas"></canvas>
+    </section>
+
+    <div class="modal-overlay" id="editorModal" hidden>
+      <div class="modal">
+        <div class="modal__header">
+          <button class="btn btn--icon" id="editorPrev" title="Previous glyph">&larr;</button>
+          <span class="modal__glyph-label" id="editorLabel">A</span>
+          <button class="btn btn--icon" id="editorNext" title="Next glyph">&rarr;</button>
+          <div class="modal__spacer"></div>
+          <button class="btn btn--ghost" id="editorUndo">Undo</button>
+          <button class="btn btn--ghost" id="editorClear">Clear</button>
+          <button class="btn btn--ghost" id="editorCancel">Cancel</button>
+          <button class="btn btn--primary" id="editorSave">Save</button>
+        </div>
+        <div class="modal__canvas-wrap" id="editorCanvasWrap">
+          <canvas class="editor-canvas" id="editorCanvas"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>
