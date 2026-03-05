@@ -1,5 +1,6 @@
 import { getSystemFonts } from './fonts.js';
-import { getGlyphSet, getSettings, saveSettings, getDrawnCount, GLYPHS } from './glyphs.js';
+import { getGlyphSet, getGlyph, getSettings, saveSettings, getDrawnCount, GLYPHS } from './glyphs.js';
+import { renderGrid, updateCard } from './grid.js';
 
 async function init() {
   // Load settings
@@ -38,6 +39,23 @@ async function init() {
 
   // Progress counter
   updateProgress();
+
+  // Render glyph grid
+  const glyphGrid = document.getElementById('glyphGrid');
+  const glyphs = getGlyphSet();
+  renderGrid(glyphGrid, glyphs, settings, (char) => {
+    // Editor will be wired in Task 7
+    console.log('Edit glyph:', char);
+  });
+
+  // Listen for glyph updates to refresh cards
+  window.addEventListener('glyph-updated', (e) => {
+    const char = e.detail;
+    const glyph = getGlyph(char);
+    const currentSettings = getSettings();
+    updateCard(glyphGrid, char, glyph, currentSettings);
+    updateProgress();
+  });
 }
 
 function updateProgress() {
