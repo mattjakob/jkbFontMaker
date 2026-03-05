@@ -1,5 +1,7 @@
 export function renderGrid(container, glyphs, settings, onGlyphClick) {
-  // Clear existing children
+  // Preserve progress badge if it exists
+  let badge = container.querySelector('.grid-progress');
+
   while (container.firstChild) {
     container.removeChild(container.firstChild);
   }
@@ -9,6 +11,19 @@ export function renderGrid(container, glyphs, settings, onGlyphClick) {
     card.addEventListener('click', () => onGlyphClick(glyph.char));
     container.appendChild(card);
   }
+
+  if (!badge) {
+    badge = document.createElement('span');
+    badge.className = 'grid-progress';
+    badge.id = 'progressCount';
+  }
+  container.appendChild(badge);
+
+  // Push badge to last column after layout
+  requestAnimationFrame(() => {
+    const cols = getComputedStyle(container).gridTemplateColumns.split(' ').length;
+    badge.style.gridColumn = String(cols);
+  });
 }
 
 function createGlyphCard(glyph, settings) {

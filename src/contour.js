@@ -1,4 +1,4 @@
-export const TRACE_SIZE = 500;
+export const TRACE_SIZE = 1000;
 
 export function glyphToContours(strokes, strokeWidth) {
   if (!strokes || strokes.length === 0) return [];
@@ -7,7 +7,13 @@ export function glyphToContours(strokes, strokeWidth) {
   const rawContours = extractContours(grid, width, height);
 
   const simplified = rawContours
-    .map(c => simplify(c, 0.5))
+    .map(c => simplify(c, 1.0))
+    .filter(c => c.length >= 3);
+
+  // Chaikin subdivision to smooth out staircase artifacts from marching squares,
+  // then a light simplification pass to keep point count manageable
+  const smoothed = simplified
+    .map(c => simplify(chaikin(chaikin(c)), 0.4))
     .filter(c => c.length >= 3);
 
   // Fix winding for TrueType non-zero fill rule.
@@ -15,7 +21,7 @@ export function glyphToContours(strokes, strokeWidth) {
   // After Y-flip in font-export, they all become CCW.
   // TrueType needs: outer contours CW, holes CCW (in font Y-up coords).
   // So: reverse outer contours (even nesting depth), leave holes as-is.
-  return fixWinding(simplified);
+  return fixWinding(smoothed);
 }
 
 function fixWinding(contours) {
@@ -182,6 +188,42 @@ function trace(grid, w, h, sx, sy, sEntry, visited) {
   } while (cx !== sx || cy !== sy || entry !== sEntry);
 
   return pts;
+}
+
+function chaikin(pts) {
+  if (pts.length < 3) return pts;
+  const n = pts.length;
+
+  // Detect sharp corners by comparing incoming/outgoing direction vectors
+  const isCorner = pts.map((_, i) => {
+    const prev = pts[(i - 1 + n) % n];
+    const curr = pts[i];
+    const next = pts[(i + 1) % n];
+    const dx1 = curr.x - prev.x, dy1 = curr.y - prev.y;
+    const dx2 = next.x - curr.x, dy2 = next.y - curr.y;
+    const len1 = Math.hypot(dx1, dy1);
+    const len2 = Math.hypot(dx2, dy2);
+    if (len1 === 0 || len2 === 0) return false;
+    const dot = (dx1 * dx2 + dy1 * dy2) / (len1 * len2);
+    return dot < 0.5; // turning angle > ~60 degrees
+  });
+
+  const result = [];
+  for (let i = 0; i < n; i++) {
+    const curr = pts[i];
+    const next = pts[(i + 1) % n];
+
+    if (isCorner[i]) {
+      result.push(curr);
+    } else {
+      result.push({ x: 0.75 * curr.x + 0.25 * next.x, y: 0.75 * curr.y + 0.25 * next.y });
+    }
+
+    if (!isCorner[(i + 1) % n]) {
+      result.push({ x: 0.25 * curr.x + 0.75 * next.x, y: 0.25 * curr.y + 0.75 * next.y });
+    }
+  }
+  return result;
 }
 
 function simplify(pts, tol) {

@@ -81,9 +81,10 @@ function getSettings() {
       fontName: saved.fontName || 'My Font',
       referenceFont: saved.referenceFont || 'Arial',
       strokeWidth: saved.strokeWidth || 8,
+      kerning: saved.kerning ?? 0,
     };
   } catch {
-    return { fontName: 'My Font', referenceFont: 'Arial', strokeWidth: 8 };
+    return { fontName: 'My Font', referenceFont: 'Arial', strokeWidth: 8, kerning: 0 };
   }
 }
 
@@ -110,12 +111,17 @@ function importProject(data) {
   return true;
 }
 
+function clearAllGlyphs() {
+  saveGlyphStore({});
+}
+
 export {
   GLYPHS,
   getGlyphSet,
   getGlyph,
   saveGlyph,
   clearGlyph,
+  clearAllGlyphs,
   isGlyphDrawn,
   getAllGlyphs,
   getDrawnCount,

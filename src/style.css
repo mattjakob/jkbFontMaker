@@ -41,26 +41,40 @@ body {
   top: 0;
   z-index: 10;
   display: flex;
-  align-items: center;
-  gap: 24px;
-  padding: 12px 24px;
+  flex-direction: column;
+  gap: 0;
   background: var(--bg);
   border-bottom: 1px solid var(--border);
 }
 
-.top-bar__left { flex: 0 0 auto; }
-.top-bar__center { flex: 1; display: flex; align-items: center; gap: 24px; justify-content: center; }
-.top-bar__right { flex: 0 0 auto; }
+.top-bar__row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 24px;
+}
+
+.top-bar__row:first-child {
+  border-bottom: 1px solid var(--border);
+}
+
+.top-bar__spacer { flex: 1; }
+
+.top-bar__logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+}
 
 .font-name-input {
-  font-family: var(--font);
+  font-family: Helvetica, Arial, sans-serif;
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text);
   background: transparent;
   border: 1px solid transparent;
   border-radius: var(--radius);
-  padding: 4px 8px;
+  padding: 4px 0;
   outline: none;
   transition: border-color 150ms;
   width: 180px;
@@ -154,6 +168,17 @@ body {
   gap: 6px;
   padding: 24px;
   padding-bottom: 200px; /* space for preview section */
+}
+
+.grid-progress {
+  display: flex;
+  align-items: end;
+  justify-content: end;
+  font-size: 10px;
+  color: var(--text-muted);
+  padding: 4px 6px;
+  pointer-events: none;
+  aspect-ratio: 1;
 }
 
 .glyph-card {
@@ -289,14 +314,10 @@ body {
 
 /* Responsive */
 @media (max-width: 640px) {
-  .top-bar {
+  .top-bar__row {
     flex-wrap: wrap;
-    gap: 12px;
-    padding: 12px 16px;
-  }
-  .top-bar__center {
-    flex-wrap: wrap;
-    gap: 12px;
+    gap: 10px;
+    padding: 8px 16px;
   }
   .glyph-grid {
     grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));

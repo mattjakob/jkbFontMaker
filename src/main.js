@@ -1,5 +1,5 @@
 import { getSystemFonts } from './fonts.js';
-import { getGlyphSet, getGlyph, getSettings, saveSettings, getDrawnCount, GLYPHS, importProject } from './glyphs.js';
+import { getGlyphSet, getGlyph, getSettings, saveSettings, getDrawnCount, GLYPHS, importProject, clearAllGlyphs } from './glyphs.js';
 import { renderGrid, updateCard, refreshAllThumbnails } from './grid.js';
 import { Editor } from './editor.js';
 import { Preview } from './preview.js';
@@ -32,6 +32,12 @@ async function init() {
   strokeWidthInput.value = settings.strokeWidth;
   strokeWidthValue.textContent = settings.strokeWidth + 'px';
 
+  // Kerning
+  const kerningInput = document.getElementById('kerning');
+  const kerningValue = document.getElementById('kerningValue');
+  kerningInput.value = settings.kerning;
+  kerningValue.textContent = settings.kerning;
+
   // Initialize editor
   const editor = new Editor({
     modal: document.getElementById('editorModal'),
@@ -52,6 +58,7 @@ async function init() {
     document.getElementById('previewInput')
   );
   preview.setReferenceFont(settings.referenceFont);
+  preview.setKerning(settings.kerning);
 
   // Render glyph grid
   const glyphGrid = document.getElementById('glyphGrid');
@@ -71,17 +78,34 @@ async function init() {
     refreshAllThumbnails(glyphGrid, getGlyphSet(), getSettings());
   });
 
-  // Progress counter
-  updateProgress();
+  kerningInput.addEventListener('input', () => {
+    kerningValue.textContent = kerningInput.value;
+    saveSettings({ kerning: parseInt(kerningInput.value) });
+    preview.setKerning(parseInt(kerningInput.value));
+  });
+
+  // Render grid (creates progress badge), then update count
   renderGrid(glyphGrid, glyphs, settings, (char) => {
     editor.open(char, refFontSelect.value, parseInt(strokeWidthInput.value));
+  });
+  updateProgress();
+
+  // Clear all button
+  document.getElementById('clearAllBtn').addEventListener('click', () => {
+    if (!confirm('Clear all glyphs? This cannot be undone.')) return;
+    clearAllGlyphs();
+    renderGrid(glyphGrid, getGlyphSet(), getSettings(), (char) => {
+      editor.open(char, refFontSelect.value, parseInt(strokeWidthInput.value));
+    });
+    updateProgress();
   });
 
   // Export button
   document.getElementById('exportBtn').addEventListener('click', () => {
     const fontName = document.getElementById('fontName').value || 'MyFont';
     const sw = parseInt(document.getElementById('strokeWidth').value);
-    exportFont(fontName, sw);
+    const kern = parseInt(document.getElementById('kerning').value);
+    exportFont(fontName, sw, kern);
   });
 
   // Import button
@@ -102,6 +126,8 @@ async function init() {
           fontNameInput.value = s.fontName;
           strokeWidthInput.value = s.strokeWidth;
           strokeWidthValue.textContent = s.strokeWidth + 'px';
+          kerningInput.value = s.kerning;
+          kerningValue.textContent = s.kerning;
           // Update reference font select if the font is in the list
           for (const opt of refFontSelect.options) {
             if (opt.value === s.referenceFont) {
@@ -112,6 +138,7 @@ async function init() {
           editor.updateReferenceFont(s.referenceFont);
           editor.updateStrokeWidth(s.strokeWidth);
           preview.setReferenceFont(s.referenceFont);
+          preview.setKerning(s.kerning);
           renderGrid(glyphGrid, getGlyphSet(), s, (char) => {
             editor.open(char, refFontSelect.value, parseInt(strokeWidthInput.value));
           });

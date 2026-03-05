@@ -6,6 +6,7 @@ export class Preview {
     this.ctx = canvas.getContext('2d');
     this.input = input;
     this.referenceFont = 'Arial';
+    this.kerning = 0;
 
     this.input.addEventListener('input', () => this.render());
     window.addEventListener('glyph-updated', () => this.render());
@@ -14,6 +15,11 @@ export class Preview {
 
   setReferenceFont(font) {
     this.referenceFont = font;
+    this.render();
+  }
+
+  setKerning(kerning) {
+    this.kerning = kerning;
     this.render();
   }
 
@@ -38,20 +44,21 @@ export class Preview {
 
     const glyphSize = 60;
     const baseline = 10;
+    // Mirror export: advanceWidth = 650 + kerning at unitsPerEm 1000
+    const advance = glyphSize * (650 + this.kerning) / 1000;
+    const spaceAdvance = glyphSize * Math.max(200, 400 + this.kerning) / 1000;
     let x = 0;
 
     for (const char of text) {
       if (char === ' ') {
-        x += glyphSize * 0.5;
+        x += spaceAdvance;
         continue;
       }
 
       const glyph = getGlyph(char);
       if (glyph && glyph.strokes && glyph.strokes.length > 0) {
-        // Draw the glyph strokes scaled to preview size
         this._drawGlyphStrokes(ctx, glyph.strokes, x, baseline, glyphSize);
       } else {
-        // Fallback: draw with reference font, faded
         ctx.save();
         ctx.globalAlpha = 0.15;
         ctx.font = `${glyphSize}px "${this.referenceFont}"`;
@@ -61,7 +68,7 @@ export class Preview {
         ctx.restore();
       }
 
-      x += glyphSize * 0.65;
+      x += advance;
     }
   }
 

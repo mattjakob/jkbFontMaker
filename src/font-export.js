@@ -2,22 +2,24 @@ import opentype from 'opentype.js';
 import { glyphToContours, TRACE_SIZE } from './contour.js';
 import { getAllGlyphs, exportProject } from './glyphs.js';
 
-export function exportFont(fontName, strokeWidth) {
+export function exportFont(fontName, strokeWidth, kerning = 0) {
   const unitsPerEm = 1000;
   const ascender = 800;
   const descender = -200;
+  const baseAdvance = 650;
+  const advance = baseAdvance + kerning;
 
   const notdefGlyph = new opentype.Glyph({
     name: '.notdef',
     unicode: 0,
-    advanceWidth: 650,
+    advanceWidth: advance,
     path: new opentype.Path(),
   });
 
   const spaceGlyph = new opentype.Glyph({
     name: 'space',
     unicode: 32,
-    advanceWidth: 400,
+    advanceWidth: Math.max(200, 400 + kerning),
     path: new opentype.Path(),
   });
 
@@ -55,7 +57,7 @@ export function exportFont(fontName, strokeWidth) {
     glyphs.push(new opentype.Glyph({
       name,
       unicode,
-      advanceWidth: 650,
+      advanceWidth: advance,
       path,
     }));
   }
