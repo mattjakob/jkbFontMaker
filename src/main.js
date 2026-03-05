@@ -2,6 +2,7 @@ import { getSystemFonts } from './fonts.js';
 import { getGlyphSet, getGlyph, getSettings, saveSettings, getDrawnCount, GLYPHS } from './glyphs.js';
 import { renderGrid, updateCard } from './grid.js';
 import { Editor } from './editor.js';
+import { Preview } from './preview.js';
 
 async function init() {
   // Load settings
@@ -44,9 +45,17 @@ async function init() {
     next: document.getElementById('editorNext'),
   });
 
+  // Initialize preview
+  const preview = new Preview(
+    document.getElementById('previewCanvas'),
+    document.getElementById('previewInput')
+  );
+  preview.setReferenceFont(settings.referenceFont);
+
   refFontSelect.addEventListener('change', () => {
     saveSettings({ referenceFont: refFontSelect.value });
     editor.updateReferenceFont(refFontSelect.value);
+    preview.setReferenceFont(refFontSelect.value);
   });
 
   strokeWidthInput.addEventListener('input', () => {
