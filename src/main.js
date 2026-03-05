@@ -1,6 +1,6 @@
 import { getSystemFonts } from './fonts.js';
 import { getGlyphSet, getGlyph, getSettings, saveSettings, getDrawnCount, GLYPHS } from './glyphs.js';
-import { renderGrid, updateCard } from './grid.js';
+import { renderGrid, updateCard, refreshAllThumbnails } from './grid.js';
 import { Editor } from './editor.js';
 import { Preview } from './preview.js';
 import { exportFont } from './font-export.js';
@@ -53,6 +53,10 @@ async function init() {
   );
   preview.setReferenceFont(settings.referenceFont);
 
+  // Render glyph grid
+  const glyphGrid = document.getElementById('glyphGrid');
+  const glyphs = getGlyphSet();
+
   refFontSelect.addEventListener('change', () => {
     saveSettings({ referenceFont: refFontSelect.value });
     editor.updateReferenceFont(refFontSelect.value);
@@ -63,14 +67,11 @@ async function init() {
     strokeWidthValue.textContent = strokeWidthInput.value + 'px';
     saveSettings({ strokeWidth: parseInt(strokeWidthInput.value) });
     editor.updateStrokeWidth(parseInt(strokeWidthInput.value));
+    refreshAllThumbnails(glyphGrid, getGlyphSet(), getSettings());
   });
 
   // Progress counter
   updateProgress();
-
-  // Render glyph grid
-  const glyphGrid = document.getElementById('glyphGrid');
-  const glyphs = getGlyphSet();
   renderGrid(glyphGrid, glyphs, settings, (char) => {
     editor.open(char, refFontSelect.value, parseInt(strokeWidthInput.value));
   });

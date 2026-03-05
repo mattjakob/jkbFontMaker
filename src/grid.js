@@ -75,6 +75,17 @@ export function renderThumbnail(canvas, glyph, settings) {
   }
 }
 
+export function refreshAllThumbnails(container, glyphSet, settings) {
+  const cards = container.querySelectorAll('.glyph-card');
+  for (const card of cards) {
+    const canvas = card.querySelector('canvas');
+    const char = card.dataset.char;
+    if (!canvas || !char) continue;
+    const glyph = glyphSet.find(g => g.char === char);
+    if (glyph) renderThumbnail(canvas, glyph, settings);
+  }
+}
+
 export function updateCard(container, char, glyph, settings) {
   const card = container.querySelector(`[data-char="${CSS.escape(char)}"]`);
   if (!card) return;
