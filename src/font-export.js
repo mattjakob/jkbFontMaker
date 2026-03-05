@@ -1,5 +1,5 @@
 import opentype from 'opentype.js';
-import { strokeToOutline } from './outline.js';
+import { glyphToContours, TRACE_SIZE } from './contour.js';
 import { getAllGlyphs } from './glyphs.js';
 
 export function exportFont(fontName, strokeWidth) {
@@ -7,7 +7,6 @@ export function exportFont(fontName, strokeWidth) {
   const ascender = 800;
   const descender = -200;
 
-  // Required .notdef glyph
   const notdefGlyph = new opentype.Glyph({
     name: '.notdef',
     unicode: 0,
@@ -15,7 +14,6 @@ export function exportFont(fontName, strokeWidth) {
     path: new opentype.Path(),
   });
 
-  // Space glyph
   const spaceGlyph = new opentype.Glyph({
     name: 'space',
     unicode: 32,
@@ -24,26 +22,27 @@ export function exportFont(fontName, strokeWidth) {
   });
 
   const glyphs = [notdefGlyph, spaceGlyph];
-
-  // Stroke width in normalized space: e.g., 8px / 200px canvas = 0.04
-  const normalizedStrokeWidth = (strokeWidth || 8) / 200;
+  const scale = unitsPerEm / TRACE_SIZE;
 
   const allGlyphs = getAllGlyphs();
   for (const glyph of allGlyphs) {
     if (!glyph.strokes || !glyph.strokes.length) continue;
 
+    const contours = glyphToContours(glyph.strokes, strokeWidth);
     const path = new opentype.Path();
 
-    for (const stroke of glyph.strokes) {
-      if (stroke.length < 2) continue;
+    for (const contour of contours) {
+      if (contour.length < 3) continue;
 
-      const outline = strokeToOutline(stroke, normalizedStrokeWidth, unitsPerEm);
-      if (outline.length < 3) continue;
-
-      // Y is flipped: font coords are Y-up (0 at baseline), our coords are Y-down (0 at top)
-      path.moveTo(outline[0].x, unitsPerEm - outline[0].y);
-      for (let i = 1; i < outline.length; i++) {
-        path.lineTo(outline[i].x, unitsPerEm - outline[i].y);
+      path.moveTo(
+        contour[0].x * scale,
+        unitsPerEm - contour[0].y * scale
+      );
+      for (let i = 1; i < contour.length; i++) {
+        path.lineTo(
+          contour[i].x * scale,
+          unitsPerEm - contour[i].y * scale
+        );
       }
       path.close();
     }
@@ -70,7 +69,6 @@ export function exportFont(fontName, strokeWidth) {
     glyphs,
   });
 
-  // Trigger download
   const sanitizedName = (fontName || 'MyFont').replace(/[^a-zA-Z0-9]/g, '');
   font.download(sanitizedName + '.otf');
 }
