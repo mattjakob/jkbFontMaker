@@ -22,17 +22,17 @@
         <button class="btn btn--primary" id="exportBtn">Export .otf</button>
         <input type="file" id="importFile" accept=".json" hidden>
       </div>
-      <div class="top-bar__row">
-        <label class="control">
+      <div class="top-bar__row top-bar__row--controls">
+        <label class="control" id="controlRef">
           <span class="control__label">Reference</span>
           <select id="refFont" class="control__select"></select>
         </label>
-        <label class="control">
+        <label class="control" id="controlStroke">
           <span class="control__label">Stroke</span>
           <input type="range" id="strokeWidth" min="2" max="24" value="8" class="control__range">
           <span class="control__value" id="strokeWidthValue">8px</span>
         </label>
-        <label class="control">
+        <label class="control" id="controlKerning">
           <span class="control__label">Kerning</span>
           <input type="range" id="kerning" min="-200" max="200" value="0" class="control__range">
           <span class="control__value" id="kerningValue">0</span>

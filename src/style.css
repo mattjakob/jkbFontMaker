@@ -315,9 +315,52 @@ body {
 /* Responsive */
 @media (max-width: 640px) {
   .top-bar__row {
+    gap: 8px;
+    padding: 8px 12px;
+  }
+  .top-bar__row:first-child {
+    flex-wrap: nowrap;
+  }
+  .top-bar__row--controls {
     flex-wrap: wrap;
-    gap: 10px;
-    padding: 8px 16px;
+  }
+  .top-bar__row--controls #controlRef {
+    order: 1;
+  }
+  .top-bar__row--controls .top-bar__spacer {
+    order: 2;
+    flex: 1;
+  }
+  .top-bar__row--controls #clearAllBtn {
+    order: 3;
+  }
+  .top-bar__row--controls #controlStroke {
+    order: 4;
+  }
+  .top-bar__row--controls #controlKerning {
+    order: 5;
+  }
+  .top-bar__logo {
+    width: 24px;
+    height: 24px;
+  }
+  .font-name-input {
+    font-size: 16px;
+    width: 0;
+    flex: 1;
+    min-width: 0;
+  }
+  .btn {
+    font-size: 11px;
+    padding: 6px 10px;
+    white-space: nowrap;
+  }
+  .control__select {
+    max-width: 120px;
+    font-size: 11px;
+  }
+  .control__range {
+    width: 60px;
   }
   .glyph-grid {
     grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
@@ -325,15 +368,34 @@ body {
     padding: 16px;
     padding-bottom: 180px;
   }
+  .modal-overlay {
+    align-items: stretch;
+    justify-content: stretch;
+  }
   .modal {
-    width: 100vw;
-    max-width: 100vw;
-    height: 100vh;
-    max-height: 100vh;
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
     border-radius: 0;
+    border: none;
+    display: flex;
+    flex-direction: column;
+  }
+  .modal__header {
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 10px 12px;
   }
   .modal__canvas-wrap {
     flex: 1;
     padding: 8px;
+    min-height: 0;
+  }
+  .editor-canvas {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    aspect-ratio: auto;
   }
 }

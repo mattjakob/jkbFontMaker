@@ -58,20 +58,20 @@ export class Editor {
     this.modal.hidden = false;
     document.body.style.overflow = 'hidden';
 
-    // Size canvas for the modal
-    this._sizeCanvas();
+    // Wait for layout before sizing canvas
+    requestAnimationFrame(() => {
+      this._sizeCanvas();
+      this.engine.setStrokeWidth(strokeWidth);
+      this.engine.setReference(char, referenceFont);
 
-    this.engine.setStrokeWidth(strokeWidth);
-    this.engine.setReference(char, referenceFont);
-
-    // Load existing strokes
-    const glyph = getGlyph(char);
-    this.engine.setStrokes(glyph.strokes);
+      const glyph = getGlyph(char);
+      this.engine.setStrokes(glyph.strokes);
+    });
   }
 
   _sizeCanvas() {
     const wrapRect = this.canvasWrap.getBoundingClientRect();
-    const size = Math.min(wrapRect.width - 32, 560);
+    const size = Math.min(wrapRect.width - 16, wrapRect.height - 16, 560);
     const dpr = window.devicePixelRatio || 1;
     this.canvas.width = size * dpr;
     this.canvas.height = size * dpr;
