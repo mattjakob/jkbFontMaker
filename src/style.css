@@ -13,6 +13,14 @@
   --font: 'Fira Code', monospace;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
+::selection {
+  background: rgba(255, 255, 255, 0.2);
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -58,7 +66,7 @@ body {
   width: 180px;
 }
 .font-name-input:focus {
-  border-color: var(--border);
+  border-color: var(--border-hover);
 }
 
 /* Controls */
@@ -84,6 +92,10 @@ body {
   padding: 4px 8px;
   outline: none;
   max-width: 160px;
+  transition: border-color 150ms;
+}
+.control__select:focus {
+  border-color: var(--border-hover);
 }
 .control__range {
   width: 80px;
@@ -162,6 +174,16 @@ body {
 }
 .glyph-card--drawn:hover {
   border-color: var(--text);
+}
+.glyph-card--drawn::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--text-muted);
 }
 
 .glyph-card canvas {
