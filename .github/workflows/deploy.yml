@@ -17,6 +17,7 @@ env:
   S3_BUCKET: jkb-play-assets
   CLOUDFRONT_DIST: E2KR3PAZFSX50D
   DEPLOY_PATH: fontmaker
+  PROJECT_NAME: "Font Maker"
 
 jobs:
   deploy:
@@ -61,3 +62,25 @@ jobs:
           aws cloudfront create-invalidation \
             --distribution-id "${CLOUDFRONT_DIST}" \
             --paths "/${DEPLOY_PATH}/*"
+
+      - name: Register in play hub
+        run: |
+          set -euo pipefail
+          aws s3 cp "s3://${S3_BUCKET}/registry.json" /tmp/registry.json 2>/dev/null || echo '[]' > /tmp/registry.json
+          python3 -c "
+          import json
+          registry = json.load(open('/tmp/registry.json'))
+          entry = {
+            'slug': '${DEPLOY_PATH}',
+            'name': '${PROJECT_NAME}',
+            'type': 'deployed',
+            'url': '/${DEPLOY_PATH}',
+            'repo': '${{ github.repository }}',
+            'visibility': 'public',
+            'updated': '$(date -u +%Y-%m-%dT%H:%M:%SZ)'
+          }
+          registry = [e for e in registry if e['slug'] != entry['slug']] + [entry]
+          json.dump(sorted(registry, key=lambda x: x['name']), open('/tmp/registry.json', 'w'), indent=2)
+          "
+          aws s3 cp /tmp/registry.json "s3://${S3_BUCKET}/registry.json" --cache-control "no-cache"
+          aws cloudfront create-invalidation --distribution-id "${CLOUDFRONT_DIST}" --paths "/registry.json"
