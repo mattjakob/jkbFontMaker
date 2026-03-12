@@ -23,16 +23,24 @@ function saveGlyphStore(store) {
 }
 
 function makeDefaultGlyph(char) {
-  return { char, strokes: [], width: DEFAULT_WIDTH };
+  return { char, strokes: [], width: DEFAULT_WIDTH, bearingLeft: 0, bearingRight: 0 };
+}
+
+function hydrateGlyph(char, saved) {
+  return {
+    char,
+    strokes: saved.strokes || [],
+    width: saved.width || DEFAULT_WIDTH,
+    bearingLeft: saved.bearingLeft || 0,
+    bearingRight: saved.bearingRight || 0,
+  };
 }
 
 function getGlyphSet() {
   const store = loadGlyphStore();
   return GLYPHS.map((char) => {
     const saved = store[char];
-    if (saved) {
-      return { char, strokes: saved.strokes || [], width: saved.width || DEFAULT_WIDTH };
-    }
+    if (saved) return hydrateGlyph(char, saved);
     return makeDefaultGlyph(char);
   });
 }
@@ -40,15 +48,26 @@ function getGlyphSet() {
 function getGlyph(char) {
   const store = loadGlyphStore();
   const saved = store[char];
-  if (saved) {
-    return { char, strokes: saved.strokes || [], width: saved.width || DEFAULT_WIDTH };
-  }
+  if (saved) return hydrateGlyph(char, saved);
   return makeDefaultGlyph(char);
 }
 
 function saveGlyph(char, strokes) {
   const store = loadGlyphStore();
-  store[char] = { strokes, width: store[char]?.width || DEFAULT_WIDTH };
+  const existing = store[char] || {};
+  store[char] = {
+    strokes,
+    width: existing.width || DEFAULT_WIDTH,
+    bearingLeft: existing.bearingLeft || 0,
+    bearingRight: existing.bearingRight || 0,
+  };
+  saveGlyphStore(store);
+}
+
+function saveGlyphBearings(char, bearingLeft, bearingRight) {
+  const store = loadGlyphStore();
+  const existing = store[char] || { strokes: [], width: DEFAULT_WIDTH };
+  store[char] = { ...existing, bearingLeft, bearingRight };
   saveGlyphStore(store);
 }
 
@@ -120,6 +139,7 @@ export {
   getGlyphSet,
   getGlyph,
   saveGlyph,
+  saveGlyphBearings,
   clearGlyph,
   clearAllGlyphs,
   isGlyphDrawn,

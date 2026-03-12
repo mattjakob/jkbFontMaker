@@ -1,22 +1,49 @@
-const FALLBACK_FONTS = [
-  'Arial', 'Helvetica', 'Times New Roman', 'Courier New', 'Georgia',
-  'Verdana', 'Comic Sans MS', 'Impact', 'Trebuchet MS', 'Palatino',
-  'Garamond', 'Bookman', 'Avant Garde', 'Futura', 'Geneva',
-  'Optima', 'Didot', 'American Typewriter', 'Baskerville',
-  'Menlo', 'Monaco', 'SF Mono', 'SF Pro', 'Helvetica Neue',
+const REFERENCE_FONTS = [
+  'EB Garamond',
+  'Fira Code',
+  'Futura',
+  'Helvetica',
+  'Libre Baskerville',
+  'Libre Caslon Text',
+  'Optima',
+  'Palatino',
+  'SF Pro',
+  'Times New Roman',
 ];
 
 async function getSystemFonts() {
-  try {
-    if ('queryLocalFonts' in window) {
-      const fonts = await window.queryLocalFonts();
-      const families = [...new Set(fonts.map(f => f.family))];
-      return families.sort();
-    }
-  } catch (e) {
-    // Permission denied or unsupported
-  }
-  return FALLBACK_FONTS;
+  return REFERENCE_FONTS;
 }
 
-export { getSystemFonts, FALLBACK_FONTS };
+// --- Reference font metrics (module state) ---
+// Measured at 1000px CSS font size so widths are in 1000-unit em space.
+
+const _measureCtx = document.createElement('canvas').getContext('2d');
+let _metrics = null;
+
+function setReferenceFont(fontFamily, chars) {
+  _measureCtx.font = `1000px "${fontFamily}"`;
+  const widths = {};
+  let total = 0;
+  for (const char of chars) {
+    const w = _measureCtx.measureText(char).width;
+    widths[char] = Math.round(w);
+    total += w;
+  }
+  // Space advance from the reference font
+  const spaceWidth = Math.round(_measureCtx.measureText(' ').width);
+  _metrics = { widths, average: Math.round(total / chars.length), spaceWidth };
+}
+
+function getCharAdvance(char) {
+  if (_metrics && _metrics.widths[char] !== undefined) {
+    return _metrics.widths[char];
+  }
+  return _metrics ? _metrics.average : 650;
+}
+
+function getSpaceAdvance() {
+  return _metrics ? _metrics.spaceWidth : 250;
+}
+
+export { getSystemFonts, setReferenceFont, getCharAdvance, getSpaceAdvance, REFERENCE_FONTS as FALLBACK_FONTS };

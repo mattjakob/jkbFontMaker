@@ -1,4 +1,5 @@
 import { getGlyph } from './glyphs.js';
+import { getCharAdvance, getSpaceAdvance } from './fonts.js';
 
 export class Preview {
   constructor(canvas, input) {
@@ -7,6 +8,7 @@ export class Preview {
     this.input = input;
     this.referenceFont = 'Arial';
     this.kerning = 0;
+    this.strokeWidth = 8;
 
     this.input.addEventListener('input', () => this.render());
     window.addEventListener('glyph-updated', () => this.render());
@@ -20,6 +22,11 @@ export class Preview {
 
   setKerning(kerning) {
     this.kerning = kerning;
+    this.render();
+  }
+
+  setStrokeWidth(w) {
+    this.strokeWidth = w;
     this.render();
   }
 
@@ -44,9 +51,7 @@ export class Preview {
 
     const glyphSize = 60;
     const baseline = 10;
-    // Mirror export: advanceWidth = 650 + kerning at unitsPerEm 1000
-    const advance = glyphSize * (650 + this.kerning) / 1000;
-    const spaceAdvance = glyphSize * Math.max(200, 400 + this.kerning) / 1000;
+    const spaceAdvance = glyphSize * (getSpaceAdvance() + this.kerning) / 1000;
     let x = 0;
 
     for (const char of text) {
@@ -56,15 +61,25 @@ export class Preview {
       }
 
       const glyph = getGlyph(char);
+      const leftBearing = (glyph.bearingLeft || 0);
+      const rightBearing = (glyph.bearingRight || 0);
+      const charAdvance = getCharAdvance(char);
+      const advance = glyphSize * (charAdvance + this.kerning + leftBearing + rightBearing) / 1000;
+
       if (glyph && glyph.strokes && glyph.strokes.length > 0) {
-        this._drawGlyphStrokes(ctx, glyph.strokes, x, baseline, glyphSize);
+        // Strokes are in em-square normalized coords (0-1), centered in the editor.
+        // Shift so the advance's left edge in the em square maps to cursor position x.
+        const emLeftEdge = (1000 - (charAdvance + this.kerning)) / 2 - leftBearing;
+        const drawX = x - glyphSize * emLeftEdge / 1000;
+        this._drawGlyphStrokes(ctx, glyph.strokes, drawX, baseline, glyphSize);
       } else {
         ctx.save();
         ctx.globalAlpha = 0.15;
         ctx.font = `${glyphSize}px "${this.referenceFont}"`;
         ctx.fillStyle = '#fff';
         ctx.textBaseline = 'top';
-        ctx.fillText(char, x, baseline);
+        const leftOffset = glyphSize * leftBearing / 1000;
+        ctx.fillText(char, x + leftOffset, baseline);
         ctx.restore();
       }
 
@@ -77,7 +92,7 @@ export class Preview {
     ctx.strokeStyle = '#fff';
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    ctx.lineWidth = 2.5;
+    ctx.lineWidth = this.strokeWidth * (size / 200);
 
     for (const stroke of strokes) {
       if (stroke.length < 2) continue;

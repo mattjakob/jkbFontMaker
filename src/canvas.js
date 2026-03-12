@@ -41,11 +41,15 @@ export class DrawingEngine {
 
   _onMove(e) {
     if (!this.isDrawing || !this.currentStroke) return;
-    this.currentStroke.push(this._getPoint(e));
+    // Use coalesced events for higher resolution strokes
+    const events = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+    for (const ce of events) {
+      this.currentStroke.push(this._getPoint(ce));
+    }
     this.render();
   }
 
-  _onEnd(e) {
+  _onEnd() {
     if (!this.isDrawing) return;
     this.isDrawing = false;
     if (this.currentStroke && this.currentStroke.length >= 2) {
@@ -62,6 +66,7 @@ export class DrawingEngine {
 
     ctx.clearRect(0, 0, w, h);
 
+    this._drawBaseline();
     this._drawReference();
 
     // Draw completed strokes
@@ -74,6 +79,25 @@ export class DrawingEngine {
     }
   }
 
+  _drawBaseline() {
+    const ctx = this.ctx;
+    const w = this.canvas.width;
+    const h = this.canvas.height;
+    // Canvas maps: top=ascender (800), bottom=descender (-200)
+    // Baseline (font Y=0) at normalized 0.8 (800 of 1000 units from top)
+    const y = Math.round(h * 0.8) + 0.5;
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(w, y);
+    ctx.stroke();
+    ctx.restore();
+  }
+
   _drawReference() {
     if (!this.referenceGlyph || !this.referenceFont) return;
     const ctx = this.ctx;
@@ -81,12 +105,14 @@ export class DrawingEngine {
     const h = this.canvas.height;
 
     ctx.save();
-    const fontSize = h * 0.7;
+    // Font size = canvas height = 1 em, so the reference fills the em square
+    const fontSize = h;
     ctx.font = `${fontSize}px "${this.referenceFont}"`;
     ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
     ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(this.referenceGlyph, w / 2, h / 2);
+    // Place the font's alphabetic baseline at Y = 0.8 * h (our baseline)
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText(this.referenceGlyph, w / 2, h * 0.8);
     ctx.restore();
   }
 

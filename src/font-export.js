@@ -1,25 +1,23 @@
 import opentype from 'opentype.js';
 import { glyphToContours, TRACE_SIZE } from './contour.js';
 import { getAllGlyphs, exportProject } from './glyphs.js';
+import { getCharAdvance, getSpaceAdvance } from './fonts.js';
 
 export function exportFont(fontName, strokeWidth, kerning = 0) {
   const unitsPerEm = 1000;
   const ascender = 800;
   const descender = -200;
-  const baseAdvance = 650;
-  const advance = baseAdvance + kerning;
-
   const notdefGlyph = new opentype.Glyph({
     name: '.notdef',
     unicode: 0,
-    advanceWidth: advance,
+    advanceWidth: getCharAdvance('A') + kerning,
     path: new opentype.Path(),
   });
 
   const spaceGlyph = new opentype.Glyph({
     name: 'space',
     unicode: 32,
-    advanceWidth: Math.max(200, 400 + kerning),
+    advanceWidth: getSpaceAdvance() + kerning,
     path: new opentype.Path(),
   });
 
@@ -30,20 +28,29 @@ export function exportFont(fontName, strokeWidth, kerning = 0) {
   for (const glyph of allGlyphs) {
     if (!glyph.strokes || !glyph.strokes.length) continue;
 
+    const leftBearing = glyph.bearingLeft || 0;
+    const rightBearing = glyph.bearingRight || 0;
+    const charAdvance = getCharAdvance(glyph.char);
+    const glyphAdvance = charAdvance + kerning + leftBearing + rightBearing;
+
     const contours = glyphToContours(glyph.strokes, strokeWidth);
     const path = new opentype.Path();
+
+    // Contours are in em-square coords (0-1000 after scaling), centered in the editor.
+    // Shift x so the advance's left edge maps to x=0 in the font.
+    const emLeftEdge = (unitsPerEm - (charAdvance + kerning)) / 2 - leftBearing;
 
     for (const contour of contours) {
       if (contour.length < 3) continue;
 
       path.moveTo(
-        contour[0].x * scale,
-        unitsPerEm - contour[0].y * scale
+        contour[0].x * scale - emLeftEdge,
+        ascender - contour[0].y * scale
       );
       for (let i = 1; i < contour.length; i++) {
         path.lineTo(
-          contour[i].x * scale,
-          unitsPerEm - contour[i].y * scale
+          contour[i].x * scale - emLeftEdge,
+          ascender - contour[i].y * scale
         );
       }
       path.close();
@@ -57,7 +64,7 @@ export function exportFont(fontName, strokeWidth, kerning = 0) {
     glyphs.push(new opentype.Glyph({
       name,
       unicode,
-      advanceWidth: advance,
+      advanceWidth: glyphAdvance,
       path,
     }));
   }

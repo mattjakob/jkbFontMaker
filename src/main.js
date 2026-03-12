@@ -1,4 +1,4 @@
-import { getSystemFonts } from './fonts.js';
+import { getSystemFonts, setReferenceFont } from './fonts.js';
 import { getGlyphSet, getGlyph, getSettings, saveSettings, getDrawnCount, GLYPHS, importProject, clearAllGlyphs } from './glyphs.js';
 import { renderGrid, updateCard, refreshAllThumbnails } from './grid.js';
 import { Editor } from './editor.js';
@@ -59,41 +59,59 @@ async function init() {
   );
   preview.setReferenceFont(settings.referenceFont);
   preview.setKerning(settings.kerning);
+  preview.setStrokeWidth(settings.strokeWidth);
 
   // Mobile preview toggle
   const previewSection = document.getElementById('previewSection');
-  const previewHandle = document.getElementById('previewHandle');
   const isMobile = () => window.matchMedia('(max-width: 640px)').matches;
 
   if (isMobile()) previewSection.classList.add('preview-section--collapsed');
 
-  previewHandle.addEventListener('click', () => {
-    previewSection.classList.toggle('preview-section--collapsed');
+  const isCollapsed = () => previewSection.classList.contains('preview-section--collapsed');
+
+  const previewInput = document.getElementById('previewInput');
+
+  // Click anywhere on panel to focus input (desktop + mobile)
+  previewSection.addEventListener('click', (e) => {
+    if (isMobile() && isCollapsed()) {
+      e.stopPropagation();
+      previewSection.classList.remove('preview-section--collapsed');
+      requestAnimationFrame(() => previewInput.focus());
+    } else {
+      previewInput.focus();
+    }
   });
 
-  let touchStartY = 0;
-  previewSection.addEventListener('touchstart', (e) => {
-    touchStartY = e.touches[0].clientY;
-  }, { passive: true });
-  previewSection.addEventListener('touchend', (e) => {
-    if (!isMobile()) return;
-    const dy = e.changedTouches[0].clientY - touchStartY;
-    if (dy < -30) previewSection.classList.remove('preview-section--collapsed');
-    if (dy > 30) previewSection.classList.add('preview-section--collapsed');
-  }, { passive: true });
-
-  document.getElementById('previewInput').addEventListener('focus', () => {
-    if (isMobile()) previewSection.classList.remove('preview-section--collapsed');
+  document.addEventListener('click', (e) => {
+    if (!isMobile() || isCollapsed()) return;
+    if (!previewSection.contains(e.target)) {
+      previewSection.classList.add('preview-section--collapsed');
+    }
   });
 
   // Render glyph grid
   const glyphGrid = document.getElementById('glyphGrid');
   const glyphs = getGlyphSet();
 
+  function applyReferenceFont(fontFamily) {
+    setReferenceFont(fontFamily, GLYPHS);
+    kerningInput.value = 0;
+    kerningValue.textContent = 0;
+    saveSettings({ kerning: 0 });
+    preview.setKerning(0);
+    editor.updateGlobalKerning(0);
+  }
+
+  // Initial load: set reference font metrics, preserve saved kerning
+  setReferenceFont(settings.referenceFont, GLYPHS);
+  preview.setKerning(settings.kerning);
+  editor.updateGlobalKerning(settings.kerning);
+
   refFontSelect.addEventListener('change', () => {
     saveSettings({ referenceFont: refFontSelect.value });
     editor.updateReferenceFont(refFontSelect.value);
     preview.setReferenceFont(refFontSelect.value);
+    applyReferenceFont(refFontSelect.value);
     refreshAllThumbnails(glyphGrid, getGlyphSet(), getSettings());
   });
 
@@ -101,13 +119,16 @@ async function init() {
     strokeWidthValue.textContent = strokeWidthInput.value + 'px';
     saveSettings({ strokeWidth: parseInt(strokeWidthInput.value) });
     editor.updateStrokeWidth(parseInt(strokeWidthInput.value));
+    preview.setStrokeWidth(parseInt(strokeWidthInput.value));
     refreshAllThumbnails(glyphGrid, getGlyphSet(), getSettings());
   });
 
   kerningInput.addEventListener('input', () => {
-    kerningValue.textContent = kerningInput.value;
-    saveSettings({ kerning: parseInt(kerningInput.value) });
-    preview.setKerning(parseInt(kerningInput.value));
+    const kern = parseInt(kerningInput.value);
+    kerningValue.textContent = kern;
+    saveSettings({ kerning: kern });
+    preview.setKerning(kern);
+    editor.updateGlobalKerning(kern);
   });
 
   // Render grid (creates progress badge), then update count
@@ -120,6 +141,8 @@ async function init() {
   document.getElementById('clearAllBtn').addEventListener('click', () => {
     if (!confirm('Clear all glyphs? This cannot be undone.')) return;
     clearAllGlyphs();
+    document.getElementById('previewInput').value = '';
+    preview.render();
     renderGrid(glyphGrid, getGlyphSet(), getSettings(), (char) => {
       editor.open(char, refFontSelect.value, parseInt(strokeWidthInput.value));
     });
@@ -163,8 +186,10 @@ async function init() {
           }
           editor.updateReferenceFont(s.referenceFont);
           editor.updateStrokeWidth(s.strokeWidth);
+          setReferenceFont(s.referenceFont, GLYPHS);
           preview.setReferenceFont(s.referenceFont);
           preview.setKerning(s.kerning);
+          editor.updateGlobalKerning(s.kerning);
           renderGrid(glyphGrid, getGlyphSet(), s, (char) => {
             editor.open(char, refFontSelect.value, parseInt(strokeWidthInput.value));
           });
