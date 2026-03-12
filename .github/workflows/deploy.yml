@@ -14,7 +14,7 @@ permissions:
 
 env:
   AWS_REGION: us-east-1
-  S3_BUCKET: jkb-play-assets
+  S3_BUCKET: jkb-tools-assets
   CLOUDFRONT_DIST: E2KR3PAZFSX50D
   DEPLOY_PATH: fontmaker
   PROJECT_NAME: "Font Maker"
@@ -63,7 +63,7 @@ jobs:
             --distribution-id "${CLOUDFRONT_DIST}" \
             --paths "/${DEPLOY_PATH}/*"
 
-      - name: Register in play hub
+      - name: Register in tools hub
         run: |
           set -euo pipefail
           aws s3 cp "s3://${S3_BUCKET}/registry.json" /tmp/registry.json 2>/dev/null || echo '[]' > /tmp/registry.json

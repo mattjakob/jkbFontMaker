@@ -4,7 +4,7 @@
 
 A browser-based tool for creating handwritten fonts. Draw each glyph on canvas, preview your typeface in real time, and export it as an OpenType (.otf) file.
 
-**[Try it live](http://play.mattjakob.com/fontmaker)**
+**[Try it live](http://tools.mattjakob.com/fontmaker)**
 
 ## Features
 
