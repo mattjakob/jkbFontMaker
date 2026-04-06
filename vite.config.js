@@ -5,5 +5,10 @@ export default defineConfig({
   base: '/fontmaker/',
   build: {
     outDir: 'dist',
+    minify: 'terser',
+    terserOptions: {
+      mangle: { toplevel: true },
+      compress: { passes: 2 },
+    },
   },
 });
